@@ -21,6 +21,7 @@ Then we will perform data cleaning on each tweet, respectively:
 import re
 import sys
 import spacy
+import pickle
 import unicodedata
 import numpy as np
 import pandas as pd
@@ -175,31 +176,33 @@ def get_clean_data(x):
 # How to work with GloVe vectors using the 200Dimension one.
 # The embedding layer will contain words represented in 200 dimension
 
-glove_vectors = dict()
-file = open('../Python/Data/glove.twitter.27B.200d.txt',
-            encoding='utf-8')
+# glove_vectors = dict()
+# file = open('../Python/Data/glove.twitter.27B.200d.txt',
+            # encoding='utf-8')
 
-# Create the word embeddings
-for line in file:
-    value = line.split()
-    word = value[0]
-    vector = np.asarray(value[1:])
-    glove_vectors[word] = vector
-file.close()
+# # Create the word embeddings
+# for line in file:
+    # value = line.split()
+    # word = value[0]
+    # vector = np.asarray(value[1:])
+    # glove_vectors[word] = vector
+# file.close()
 
 #TODO - Save Dictironnary 
-np.save('GloveDict.npy', glove_vectors) 
+# with open('test_file.pickle','wb') as handle:
+    # pickle.dump(glove_vectors, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-# Load
-read_dictionary = np.load('GloveDict.npy',allow_pickle='TRUE').item()
+with open('test_file.pickle', 'rb') as handle:
+    data_test = pickle.load(handle)
 
-print(read_dictionary.get("shouldnt"))
-print(read_dictionary.get("wouldnt"))
-print(read_dictionary.get("couldnt"))
-print(read_dictionary.get("id"))
-print(read_dictionary.get("mightve"))
-print(read_dictionary.get("mustnt"))
-print(read_dictionary.get("its"))
+
+print(data_test.get("shouldnt"))
+# print(glove_vectors.get("wouldnt"))
+# print(glove_vectors.get("couldnt"))
+# print(glove_vectors.get("id"))
+# print(glove_vectors.get("mightve"))
+# print(glove_vectors.get("mustnt"))
+# print(glove_vectors.get("its"))
 sys.exit()
 
 # our task is to get the global vectors for our words
