@@ -39,7 +39,7 @@ from clean import contractions
 
 nlp = spacy.load('en_core_web_md')
 
-df = pd.read_csv('../Python/Data/twitter-data-master/twitter4000.csv'
+df = pd.read_csv('../Python/Data/twitter-data-master/twitter4000.csv')
 
 # Find most frequent and rarest word ocrruences
 text = ' '.join(df['twitts'])
@@ -72,6 +72,10 @@ def get_cleat_text(text):
 
 df['twitts'] = df['twitts'].apply(lambda x: get_cleat_text(x))
 
+print(df.loc[[691]])
+sys.exit()
+# df.to_csv("clean_csv_4k.csv")
+
 # convert from series to a list
 text = df['twitts'].tolist()
 
@@ -103,7 +107,6 @@ for word, index in token.word_index.items():
         word_vector_matrix[index] = vector
     else:
         print(word)
-
 
 x_train, x_test, y_train, y_test = train_test_split(
     X, y, random_state=42, test_size=0.2, stratify=y)
