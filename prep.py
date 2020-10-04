@@ -88,15 +88,17 @@ def get_cleat_text(text):
         # find and replace all websites
         text = re.sub(
             r'(http|https|ftp|ssh)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?', '', text)
-        # # clean and replace with contractions
-        # text = contractions_replace(text)
         # find and replace all non-alpha numerical valu
         text = re.sub(r'[^A-Z a-z]+', '', text)
+        # #Remove accented characters
+        text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8', 'ignore')
         ##############################
-        # # fix all potential spelling mistakes
-        text = str(TextBlob(text).correct())
+        #Find and replace all most used words 
+        text = ' '.join([t for t in text.split() if t not in Top_10])
         #Find and replace all least frequently used words
         text = ' '.join([t for t in text.split() if t not in Least_freq])
+        #get base lemma
+        text = get_base_lemma(text)
         return text
     else:
         return text
@@ -127,10 +129,10 @@ def get_clean_data(x):
         x = contractions_replace(x)
 
         # remove all numerical values
-        # x = re.sub(r'[0-9]+', "", x)
+        x = re.sub(r'[0-9]+', "", x)
 
         # remove all special characters
-        # x = re.sub(r'[^\w ]+', ' ', x)
+        x = re.sub(r'[^\w ]+', ' ', x)
 
         # #Remove accented characters
         x = unicodedata.normalize('NFKD', x).encode('ascii', 'ignore').decode('utf-8', 'ignore')
@@ -141,42 +143,42 @@ def get_clean_data(x):
         # # split aka tokenize our tweets
         x = x.split()
 
-        # # We are removed all the workds that are in our top 10
-        # x = [words for words in x if words not in Top_10]
+        # We are removed all the workds that are in our top 10
+        x = [words for words in x if words not in Top_10]
 
         # # We are rempoving all the words that are not in our rare list
-        # x = [words for words in x if words not in Least_freq] # remove all the words in our STOP_WORDS
-        # x = [words for words in x if words not in STOP_WORDS]
+        x = [words for words in x if words not in Least_freq] # remove all the words in our STOP_WORDS
+        x = [words for words in x if words not in STOP_WORDS]
 
         return " ".join(x)
     else:
         return x
 
 
-# df['twitts'] = df['twitts'].apply(lambda x: get_cleat_text(x))
+df['twitts'] = df['twitts'].apply(lambda x: get_cleat_text(x))
 # # df['twitts'] = df['twitts'].apply(lambda x: get_clean_data(x))
 
-# # convert from series to a list
-# text = df['twitts'].tolist()
+# convert from series to a list
+text = df['twitts'].tolist()
 
-# y = df['sentiment']
+y = df['sentiment']
 
-# token = Tokenizer()
-# token.fit_on_texts(text)
+token = Tokenizer()
+token.fit_on_texts(text)
 
-# vocab_size = len(token.word_index) + 1
+vocab_size = len(token.word_index) + 1
 
-# encoded_text = token.texts_to_sequences(text)
+encoded_text = token.texts_to_sequences(text)
 
-# # Pad the sequences
-# max_len = max([len(s.split()) for s in text])
+# Pad the sequences
+max_len = max([len(s.split()) for s in text])
 
-# X = pad_sequences(encoded_text, maxlen=max_len, padding='post')
+X = pad_sequences(encoded_text, maxlen=max_len, padding='post')
 
 # How to work with GloVe vectors using the 200Dimension one.
 # The embedding layer will contain words represented in 200 dimension
 
-# glove_vectors = dict()
+##### data_test = dict()
 # file = open('../Python/Data/glove.twitter.27B.200d.txt',
             # encoding='utf-8')
 
@@ -185,32 +187,23 @@ def get_clean_data(x):
     # value = line.split()
     # word = value[0]
     # vector = np.asarray(value[1:])
-    # glove_vectors[word] = vector
+    # data_test[word] = vector
 # file.close()
 
 #TODO - Save Dictironnary 
 # with open('test_file.pickle','wb') as handle:
-    # pickle.dump(glove_vectors, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # pickle.dump(data_test, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 with open('test_file.pickle', 'rb') as handle:
     data_test = pickle.load(handle)
 
-
-print(data_test.get("shouldnt"))
-# print(glove_vectors.get("wouldnt"))
-# print(glove_vectors.get("couldnt"))
-# print(glove_vectors.get("id"))
-# print(glove_vectors.get("mightve"))
-# print(glove_vectors.get("mustnt"))
-# print(glove_vectors.get("its"))
-sys.exit()
 
 # our task is to get the global vectors for our words
 # create empty matrix with the proper size
 word_vector_matrix = np.zeros((vocab_size, 200))
 
 for word, index in token.word_index.items():
-    vector = glove_vectors.get(word)
+    vector = data_test.get(word)
     # check if the word is not present in GloVe
     if vector is not None:
         word_vector_matrix[index] = vector
@@ -237,7 +230,6 @@ model.add(Dense(1, activation='sigmoid'))
 
 model.compile(optimizer=Adam(learning_rate=0.0001), loss='binary_crossentropy',
               metrics=['accuracy'])
-
 model.fit(x_train, y_train, epochs=30, validation_data=(x_test, y_test))
 
 
