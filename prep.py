@@ -37,12 +37,9 @@ from tensorflow.keras.layers import Dense, Flatten, Dropout, Embedding, Activati
 
 from clean import contractions
 
-
 nlp = spacy.load('en_core_web_md')
 
-df = pd.read_csv('../Python/Data/twitter-data-master/twitter4000.csv')
-# df = df.dropna()
-
+df = pd.read_csv('../Python/Data/twitter-data-master/twitter4000.csv'
 
 # Find most frequent and rarest word ocrruences
 text = ' '.join(df['twitts'])
@@ -51,30 +48,7 @@ freq_ = pd.Series(text).value_counts()
 Top_10 = freq_[:10]
 Least_freq = freq_[freq_.values == 1]
 
-
 # Clean the data
-def contractions_replace(x):
-    if type(x) is str:
-        for key in contractions:
-            value = contractions[key]
-            x = x.replace(key, value)
-        return x
-    return x
-
-def get_base_lemma(x):
-    x = str(x)
-    x_list = []
-    doc = nlp(x)
-    
-    for token in doc:
-        lemma = token.lemma_
-        if lemma == '-PRON-' or lemma == 'be':
-            lemma = token.text
-        x_list.append(lemma)
-
-    return ' '.join(x_list)
-
-
 def get_cleat_text(text):
     if type(text) is str:
         text = text.lower()
@@ -92,71 +66,11 @@ def get_cleat_text(text):
         text = re.sub(r'[^A-Z a-z]+', '', text)
         # #Remove accented characters
         text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8', 'ignore')
-        ##############################
-        #Find and replace all most used words 
-        text = ' '.join([t for t in text.split() if t not in Top_10])
-        #Find and replace all least frequently used words
-        text = ' '.join([t for t in text.split() if t not in Least_freq])
-        #get base lemma
-        text = get_base_lemma(text)
         return text
     else:
         return text
-
-def get_clean_data(x):
-    if type(x) is str:
-        # # turn everything into lower case
-        x = x.lower()
-
-        # # remove all emails
-        x = re.sub('([a-z0-9+._-]+@[a-z0-9+._-]+\.[a-z0-9+_-]+)', "", x)
-
-        # remove all @ first
-        x = re.sub(r'@([A-Za-z0-9_]+)', "", x)
-
-        # # remove and strip all retweets (RT)
-        x = re.sub(r'\brt:\b', '', x).strip()
-
-        # # remove all websites
-        # # TODO: Figure out how it works for all possible website protocols
-        x = re.sub(
-            r'(http|https|ftp|ssh)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?', '', x)
-
-        # # fix all potential spelling mistakes
-        x = str(TextBlob(x).correct())
-
-        # # clean and replace with contractions
-        x = contractions_replace(x)
-
-        # remove all numerical values
-        x = re.sub(r'[0-9]+', "", x)
-
-        # remove all special characters
-        x = re.sub(r'[^\w ]+', ' ', x)
-
-        # #Remove accented characters
-        x = unicodedata.normalize('NFKD', x).encode('ascii', 'ignore').decode('utf-8', 'ignore')
-
-        # #Make base form of words AKA Lemmatize w/SPACY
-        x = get_base_lemma(x)
-
-        # # split aka tokenize our tweets
-        x = x.split()
-
-        # We are removed all the workds that are in our top 10
-        x = [words for words in x if words not in Top_10]
-
-        # # We are rempoving all the words that are not in our rare list
-        x = [words for words in x if words not in Least_freq] # remove all the words in our STOP_WORDS
-        x = [words for words in x if words not in STOP_WORDS]
-
-        return " ".join(x)
-    else:
-        return x
-
 
 df['twitts'] = df['twitts'].apply(lambda x: get_cleat_text(x))
-# # df['twitts'] = df['twitts'].apply(lambda x: get_clean_data(x))
 
 # convert from series to a list
 text = df['twitts'].tolist()
@@ -175,28 +89,8 @@ max_len = max([len(s.split()) for s in text])
 
 X = pad_sequences(encoded_text, maxlen=max_len, padding='post')
 
-# How to work with GloVe vectors using the 200Dimension one.
-# The embedding layer will contain words represented in 200 dimension
-
-##### data_test = dict()
-# file = open('../Python/Data/glove.twitter.27B.200d.txt',
-            # encoding='utf-8')
-
-# # Create the word embeddings
-# for line in file:
-    # value = line.split()
-    # word = value[0]
-    # vector = np.asarray(value[1:])
-    # data_test[word] = vector
-# file.close()
-
-#TODO - Save Dictironnary 
-# with open('test_file.pickle','wb') as handle:
-    # pickle.dump(data_test, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
 with open('test_file.pickle', 'rb') as handle:
     data_test = pickle.load(handle)
-
 
 # our task is to get the global vectors for our words
 # create empty matrix with the proper size
