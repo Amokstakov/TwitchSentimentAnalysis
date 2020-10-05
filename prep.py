@@ -72,8 +72,6 @@ def get_cleat_text(text):
 
 df['twitts'] = df['twitts'].apply(lambda x: get_cleat_text(x))
 
-print(df.loc[[691]])
-sys.exit()
 # df.to_csv("clean_csv_4k.csv")
 
 # convert from series to a list
